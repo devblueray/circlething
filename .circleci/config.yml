@@ -1,0 +1,42 @@
+version: 2
+jobs:
+    build_app:
+        docker:
+            - image: cimg/go:1.13
+        steps:
+            - checkout
+            - run:
+                name: Build build app 
+                command: go build .
+            - run: 
+                name: copy into docker build dir
+                command: mkdir artifact && cp citest artifact
+            - run:
+                name: List artifact dir
+                command: pwd && ls && ls artifact
+            - persist_to_workspace:
+                root: ~/project
+                paths:
+                    - artifact/*
+
+    print_workspace:
+        docker:
+            - image: cimg/base:2020.01
+        steps:
+            - attach_workspace:
+                at: ~/
+            - run:
+                name: List workspace 
+                command: pwd && ls ~/ && ls ~/artifact
+            - run:
+                name: Hello app
+                command: ~/artifact/citest
+
+workflows:
+    version: 2
+    test_stuff:
+        jobs:
+            - build_app
+            - print_workspace:
+                requires:
+                    - build_app
